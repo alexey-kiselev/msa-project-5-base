@@ -1,0 +1,6 @@
+order_id,status,amount
+1,delivered,100
+2,delivered,200
+3,pending,50
+4,delivered,150
+5,cancelled,80
