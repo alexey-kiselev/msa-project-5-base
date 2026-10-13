@@ -1,0 +1,31 @@
+services:
+  mailpit:
+    # https://mailpit.axllent.org/
+    # https://github.com/axllent/mailpit
+    # https://hub.docker.com/r/axllent/mailpit
+    image: axllent/mailpit:v1.31
+    ports:
+      - 127.0.0.1:8025:8025
+      - 127.0.0.1:1025:1025
+
+  airflow:
+    # https://airflow.apache.org/
+    # https://github.com/apache/airflow
+    # https://hub.docker.com/r/apache/airflow
+    image: apache/airflow:slim-3.3.2-python3.14
+    depends_on:
+      - mailpit
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+    ports:
+      - 127.0.0.1:8080:8080
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - ./data:/opt/airflow/data:ro
+    command: >
+      bash -c "
+        airflow db migrate && \
+        airflow connections add smtp_default --conn-type smtp --conn-host mailpit --conn-port 1025 --conn-extra '{\"from_email\":\"airflow@example.com\",\"disable_ssl\":true,\"disable_tls\":true}' && \
+        airflow standalone
+      "

@@ -1,0 +1,9 @@
+NAME                             SCHEDULE     TIMEZONE        SUSPEND   ACTIVE   LAST SCHEDULE   AGE   CONTAINERS   IMAGES                   SELECTOR
+cronjob.batch/shipments-export   0 20 * * *   Europe/Moscow   False     0        <none>          58s   export       shipments-export:local   <none>
+
+NAME                                STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                   SELECTOR
+job.batch/shipments-export-manual   Complete   1/1           51s        52s   export       shipments-export:local   batch.kubernetes.io/controller-uid=02990f47-07ba-4c88-adeb-919de75abd42
+
+NAME                                READY   STATUS      RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+pod/postgres-57f5899759-fnnl4       1/1     Running     0          58s   10.244.0.3   minikube   <none>           <none>
+pod/shipments-export-manual-7hxvn   0/1     Completed   0          52s   10.244.0.4   minikube   <none>           <none>
