@@ -1,0 +1,54 @@
+@startuml c4_observability
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title TradeWare - мониторинг, оповещения и логирование
+
+Person(user, "Сотрудник склада", "Загружает CSV")
+Person(sre, "SRE / DevOps", "Смотрит дашборды и алерты")
+
+System_Boundary(sys, "TradeWare") {
+    Container(web, "Web Interface", "Angular", "Загрузка отчёта")
+    Container(api, "Application Server", "WildFly / Java", "Приём файла, валидация формата, запуск Job")
+    Container(batch, "ETL Service", "Spring Boot + Spring Batch", "ETL")
+    ContainerDb(inv, "БД номенклатуры", "PostgreSQL", "Актуальные остатки")
+    ContainerDb(ref, "БД справочников", "PostgreSQL", "Характеристики, промо и т.д.")
+    ContainerDb(meta, "JobRepository", "PostgreSQL", "История Job")
+    Container(gcs, "Файловое хранилище", "GCS", "Загруженные CSV")
+}
+
+System_Boundary(obs, "Observability") {
+    System_Boundary(mon, "Мониторинг и оповещения") {
+        Container(prom, "Prometheus", "metrics", "Scrape метрик")
+        Container(am, "Alertmanager", "alerts", "Группировка и маршрутизация")
+        Container(graf, "Grafana", "UI", "Дашборды")
+    }
+
+    System_Boundary(logs, "Логирование") {
+        Container(fb, "Filebeat", "logs agent", "Сбор stdout")
+        Container(es, "Elasticsearch", "logs store", "Индексы + ILM")
+        Container(kib, "Kibana", "UI", "Поиск логов")
+    }
+}
+
+Rel(user, web, "Загружает CSV", "HTTPS")
+Rel(web, api, "REST", "JSON/HTTP")
+Rel(api, gcs, "Сохраняет файл")
+Rel(api, batch, "Запускает Job", "HTTP")
+Rel(batch, gcs, "Читает CSV")
+Rel(batch, ref, "Обогащает", "SQL")
+Rel(batch, inv, "Обогащает", "SQL")
+Rel(batch, meta, "Статусы Job", "JDBC")
+
+Rel(prom, api, "Scrape", "/metrics")
+Rel(prom, batch, "Scrape", "/metrics")
+Rel(prom, am, "Правила алертов")
+Rel(am, sre, "Email / Slack")
+Rel(graf, prom, "Datasource")
+Rel(sre, graf, "Смотрит метрики")
+Rel(fb, api, "Читает stdout")
+Rel(fb, batch, "Читает stdout")
+Rel(fb, es, "Bulk index")
+Rel(kib, es, "Query")
+Rel(sre, kib, "Ищет логи")
+
+@enduml
