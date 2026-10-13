@@ -1,0 +1,19 @@
+@startuml c4_to_be
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title To Be: Утренняя выгрузка прайс-листов
+
+Person(user, "Операции / B2B", "Получатели CSV прайс-листов")
+
+System_Boundary(k8s, "k8s") {
+    ContainerDb(pg, "БД прайс-листов", "PostgreSQL", "products, categories, clients, client_prices")
+    Container(cron, "Выгрузка прайсов", "k8s CronJob", "Каждый день в 06:00")
+    Container(store, "Хранилище CSV", "PVC / S3", "Готовые файлы прайс-листов")
+}
+
+Rel(cron, pg, "SELECT JOIN", "SQL")
+Rel(cron, store, "Пишет файл", "csv")
+Rel(user, store, "Скачивает файлы", "download")
+
+@enduml
